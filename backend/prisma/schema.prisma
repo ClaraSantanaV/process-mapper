@@ -1,14 +1,46 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Area {
+  id        String    @id @default(uuid())
+  name      String
+  order     Int       @default(0)
+  processes Process[]
+}
+
+model Process {
+  id        String   @id @default(uuid())
+  name      String
+
+  areaId    String
+  area    Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  parentId  String?
+  parent    Process?  @relation("Hierarchy", fields: [parentId], references: [id])
+  children  Process[] @relation("Hierarchy")
+
+  level     Int      @default(0)
+  order     Int      @default(0)
+
+  tools         String?
+  responsible   String?
+  documentation String?
+  status        ProcessStatus?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([areaId])
+}
+
+enum ProcessStatus {
+  MANUAL
+  SYSTEMIC
 }
