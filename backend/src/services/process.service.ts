@@ -1,82 +1,73 @@
-import { Prisma, Process } from "@prisma/client"
+import type { Process } from "@prisma/client"
 import { prisma } from "../lib/prisma.js"
+import type { CreateProcessInput, UpdateProcessInput } from "../schemas/process.schema.js"
 
 type ProcessNode = Process & { children: ProcessNode[] }
 
 export const processService = {
-  async getAll(parentId?: string) {
-    return prisma.process.findMany({
-      where: { parentId: parentId ?? null },
-      orderBy: { order: "asc" }
-    })
-  },
-
-  async getById(id: string) {
-    return prisma.process.findUnique({ where: { id } })
-  },
-
-  async create(data: Prisma.ProcessUncheckedCreateInput) {
-    return prisma.process.create({ data })
-  },
-
-  async update(id: string, data: Prisma.ProcessUncheckedUpdateInput) {
-    return prisma.process.update({
-      where: { id },
-      data
-    })
-  },
-
-  async delete(id: string) {
-    return prisma.process.delete({ where: { id } })
-  },
-
-  async move(id: string, parentId: string | null) {
-    return prisma.process.update({
-      where: { id },
-      data: { parentId }
-    })
-  },
-
-  async getTree() {
-    const processes = await prisma.process.findMany({
-      orderBy: { order: "asc" }
-    })
+  async getTree(): Promise<ProcessNode[]> {
+    const processes = await prisma.process.findMany({ orderBy: { order: "asc" } })
 
     const map = new Map<string, ProcessNode>()
     const roots: ProcessNode[] = []
 
-    processes.forEach(process =>
-      map.set(process.id, { ...process, children: [] })
-    )
+    for (const p of processes) {
+      map.set(p.id, { ...p, children: [] })
+    }
 
-    processes.forEach(process => {
-      const node = map.get(process.id)
-      if (!node) return
+    for (const p of processes) {
+      const node = map.get(p.id)
+      if (!node) continue
 
-      if (process.parentId) {
-        map.get(process.parentId)?.children.push(node)
+      if (p.parentId) {
+        map.get(p.parentId)?.children.push(node)
       } else {
         roots.push(node)
       }
-    })
+    }
 
     return roots
   },
 
-  async getBreadcrumb(id: string) {
-    const breadcrumb: Process[] = []
-    let current: Process | null = await prisma.process.findUnique({
-      where: { id }
+  async create(data: CreateProcessInput) {
+    return prisma.process.create({ data })
+  },
+
+  async update(id: string, data: UpdateProcessInput) {
+    return prisma.process.update({ where: { id }, data })
+  },
+
+  async delete(id: string) {
+    const descendants = await prisma.$queryRaw<{ id: string }[]>`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM "Process" WHERE id = ${id}
+        UNION ALL
+        SELECT p.id FROM "Process" p
+        INNER JOIN descendants d ON p."parentId" = d.id
+      )
+      SELECT id FROM descendants
+    `
+
+    const ids = descendants.map((d) => d.id)
+
+    return prisma.process.deleteMany({
+      where: { id: { in: ids } },
     })
+  },
 
-    while (current) {
-      breadcrumb.unshift(current)
-      if (!current.parentId) break
-      current = await prisma.process.findUnique({
-        where: { id: current.parentId }
-      })
-    }
+  async getBreadcrumb(id: string): Promise<Process[]> {
+    return prisma.$queryRaw<Process[]>`
+      WITH RECURSIVE breadcrumb AS (
+        SELECT * FROM "Process" WHERE id = ${id}
+        UNION ALL
+        SELECT p.* FROM "Process" p
+        INNER JOIN breadcrumb b ON p.id = b."parentId"
+      )
+      SELECT * FROM breadcrumb ORDER BY level ASC
+    `
+  },
 
-    return breadcrumb
-  }
+  async move(id: string, parentId: string | null) {
+    return prisma.process.update({ where: { id }, data: { parentId } })
+  },
 }

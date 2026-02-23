@@ -1,51 +1,45 @@
 import { Router } from "express"
+import { asyncHandler } from "../middlewares/async.middleware.js"
 import { processService } from "../services/process.service.js"
-import { createProcessSchema, updateProcessSchema } from "../schemas/process.schema.js"
+import { createProcessSchema, moveProcessSchema, updateProcessSchema } from "../schemas/process.schema.js"
 
 const router = Router()
 
-router.get("/", async (req, res) => {
-  const { parentId } = req.query
-  const data = await processService.getAll(parentId as string)
-  res.json(data)
-})
-
-router.get("/tree", async (_, res) => {
+router.get("/tree", asyncHandler(async (_req, res) => {
   const tree = await processService.getTree()
   res.json(tree)
-})
+}))
 
-router.get("/:id", async (req, res) => {
-  const data = await processService.getById(req.params.id)
+router.get("/:id/breadcrumb", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
+  const data = await processService.getBreadcrumb(id)
   res.json(data)
-})
+}))
 
-router.get("/:id/breadcrumb", async (req, res) => {
-  const data = await processService.getBreadcrumb(req.params.id)
-  res.json(data)
-})
-
-router.post("/", async (req, res) => {
+router.post("/", asyncHandler(async (req, res) => {
   const parsed = createProcessSchema.parse(req.body)
   const data = await processService.create(parsed)
-  res.json(data)
-})
+  res.status(201).json(data)
+}))
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id/move", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
+  const { parentId } = moveProcessSchema.parse(req.body)
+  const data = await processService.move(id, parentId)
+  res.json(data)
+}))
+
+router.patch("/:id", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
   const parsed = updateProcessSchema.parse(req.body)
-  const data = await processService.update(req.params.id, parsed)
+  const data = await processService.update(id, parsed)
   res.json(data)
-})
+}))
 
-router.patch("/:id/move", async (req, res) => {
-  const { parentId } = req.body
-  const data = await processService.move(req.params.id, parentId)
-  res.json(data)
-})
-
-router.delete("/:id", async (req, res) => {
-  await processService.delete(req.params.id)
-  res.json({ message: "Deleted" })
-})
+router.delete("/:id", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
+  await processService.delete(id)
+  res.json({ message: "Process deleted" })
+}))
 
 export default router

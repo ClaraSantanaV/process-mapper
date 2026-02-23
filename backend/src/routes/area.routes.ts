@@ -1,54 +1,38 @@
 import { Router } from "express"
+import { asyncHandler } from "../middlewares/async.middleware.js"
 import { areaService } from "../services/area.service.js"
-import {
-  createAreaSchema,
-  reorderAreaSchema,
-  updateAreaSchema
-} from "../schemas/area.schema.js"
+import { createAreaSchema, reorderAreaSchema, updateAreaSchema } from "../schemas/area.schema.js"
 
 const router = Router()
 
-// GET /areas
-router.get("/", async (req, res) => {
+router.get("/", asyncHandler(async (_req, res) => {
   const areas = await areaService.getAll()
   res.json(areas)
-})
+}))
 
-// POST /areas
-router.post("/", async (req, res) => {
+router.post("/", asyncHandler(async (req, res) => {
   const parsed = createAreaSchema.parse(req.body)
-  const area = await areaService.create({
-    name: parsed.name,
-    ...(parsed.order !== undefined && { order: parsed.order })
-  })
-  res.json(area)
-})
+  const area = await areaService.create(parsed)
+  res.status(201).json(area)
+}))
 
-// PATCH /areas/reorder
-router.patch("/reorder", async (req, res) => {
+router.patch("/reorder", asyncHandler(async (req, res) => {
   const { orderedIds } = reorderAreaSchema.parse(req.body)
   await areaService.reorder(orderedIds)
-
   res.json({ message: "Areas reordered" })
-})
+}))
 
-// PATCH /areas/:id
-router.patch("/:id", async (req, res) => {
-  const { id } = req.params
+router.patch("/:id", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
   const parsed = updateAreaSchema.parse(req.body)
-  const area = await areaService.update(id, Object.fromEntries(
-    Object.entries(parsed).filter(([, value]) => value !== undefined)
-  ))
+  const area = await areaService.update(id, parsed)
   res.json(area)
-})
+}))
 
-// DELETE /areas/:id
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params
+router.delete("/:id", asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string }
   await areaService.delete(id)
-
   res.json({ message: "Area deleted" })
-})
-
+}))
 
 export default router
