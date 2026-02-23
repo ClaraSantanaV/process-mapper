@@ -5,6 +5,7 @@ node_modules/
 dist/
 dist-ssr/
 build/
+*.tsbuildinfo
 
 # ─── Environment variables ───────────────────────────────────
 .env
@@ -35,6 +36,7 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+.eslintcache
 
 # ─── OS ──────────────────────────────────────────────────────
 .DS_Store
