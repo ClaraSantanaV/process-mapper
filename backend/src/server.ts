@@ -6,6 +6,7 @@ import { errorHandler } from "./middlewares/error.middleware.js"
 const app = express()
 
 app.use(express.json())
+app.disable("etag")
 
 app.use("/api/v1/areas", areaRoutes)
 app.use("/api/v1/processes", processRoutes)

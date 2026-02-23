@@ -2,7 +2,6 @@ import { prisma } from "../src/lib/prisma.js"
 import { ProcessStatus } from "@prisma/client"
 
 async function main() {
-  // ⭐ FINANCEIRO
   const financeiro = await prisma.area.create({
     data: { name: "Financeiro", order: 0 }
   })
@@ -51,7 +50,6 @@ async function main() {
     }
   })
 
-  // ⭐ RH
   const rh = await prisma.area.create({
     data: { name: "RH", order: 1 }
   })
@@ -88,7 +86,6 @@ async function main() {
     }
   })
 
-  // ⭐ TI
   const ti = await prisma.area.create({
     data: { name: "TI", order: 2 }
   })
