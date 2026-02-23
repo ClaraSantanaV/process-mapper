@@ -50,6 +50,7 @@ process-mapper/
 ├── backend/              # Express API
 │   ├── prisma/           # Schema, migrations, seed
 │   └── src/
+│       ├── __tests__/    # Integration + unit tests (Vitest + Supertest)
 │       ├── lib/          # Prisma client singleton
 │       ├── middlewares/  # asyncHandler, errorHandler
 │       ├── routes/       # HTTP layer — request/response only
@@ -61,6 +62,7 @@ process-mapper/
 │   └── FRONTEND.md       # Frontend reference
 └── frontend/             # React SPA
     └── src/
+        ├── __tests__/    # Component tests (Vitest + React Testing Library)
         ├── components/   # UI components + icon system
         ├── hooks/        # Data fetching hooks
         ├── pages/        # Page-level components + state
@@ -159,6 +161,8 @@ Open [http://localhost:5173](http://localhost:5173).
 | `npm run dev` | Start server in watch mode with `tsx` (development) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start` | Run compiled server from `dist/` (production) |
+| `npm test` | Run tests once (Vitest) |
+| `npm run test:watch` | Run tests in watch mode |
 | `npx prisma migrate dev` | Create and apply a new migration |
 | `npx prisma migrate deploy` | Apply pending migrations (production) |
 | `npx prisma db seed` | Seed the database |
@@ -173,6 +177,8 @@ Open [http://localhost:5173](http://localhost:5173).
 | `npm run build` | Type-check + bundle for production |
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview the production build locally |
+| `npm test` | Run tests once (Vitest + React Testing Library) |
+| `npm run test:watch` | Run tests in watch mode |
 
 ---
 
