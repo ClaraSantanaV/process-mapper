@@ -261,13 +261,19 @@ For the current scope, simple `useEffect`-based hooks are sufficient and introdu
 ### `api.ts` — Axios Instance
 
 ```typescript
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : "/api/v1"
+
 export const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
 })
 ```
 
-All services import `api` from here. This means changing the base URL is a single-file change. The instance can also be extended with interceptors (e.g., for authentication tokens) without modifying individual service files.
+`VITE_API_URL` is an environment variable set in the Vercel dashboard pointing to the Render backend URL. In development it is not set, so `BASE_URL` falls back to `"/api/v1"` and the Vite proxy handles routing to `localhost:3000`.
+
+All services import `api` from here. This means changing the base URL or adding interceptors (e.g., for authentication tokens) is a single-file change.
 
 ### Service Pattern
 
