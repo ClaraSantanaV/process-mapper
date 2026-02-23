@@ -14,8 +14,8 @@ const processBase = z.object({
 export const createProcessSchema = processBase
 
 export const updateProcessSchema = processBase
-  .omit({ areaId: true })  
-  .partial()                
+  .omit({ areaId: true, parentId: true })
+  .partial()
   .extend({ order: processBase.shape.order })
 
 export const moveProcessSchema = z.object({
