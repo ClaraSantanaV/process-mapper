@@ -159,6 +159,8 @@ Open [http://localhost:5173](http://localhost:5173).
 | `npm run dev` | Start server in watch mode with `tsx` (development) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start` | Run compiled server from `dist/` (production) |
+| `npm test` | Run tests once (Vitest) |
+| `npm run test:watch` | Run tests in watch mode |
 | `npx prisma migrate dev` | Create and apply a new migration |
 | `npx prisma migrate deploy` | Apply pending migrations (production) |
 | `npx prisma db seed` | Seed the database |
@@ -173,6 +175,8 @@ Open [http://localhost:5173](http://localhost:5173).
 | `npm run build` | Type-check + bundle for production |
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview the production build locally |
+| `npm test` | Run tests once (Vitest + React Testing Library) |
+| `npm run test:watch` | Run tests in watch mode |
 
 ---
 

@@ -18,6 +18,7 @@ This document covers the internal structure, tools, and conventions of the Expre
 - [Services](#services)
 - [TypeScript Configuration](#typescript-configuration)
 - [Database Migrations](#database-migrations)
+- [Testing](#testing)
 - [Production and Deployment](#production-and-deployment)
 
 ---
@@ -425,3 +426,90 @@ app.use(cors({ origin: process.env.ALLOWED_ORIGIN ?? "*" }))
 
 - **Development:** `ALLOWED_ORIGIN` is unset → falls back to `"*"` (all origins allowed, safe because the Vite proxy already handles routing)
 - **Production:** set to `https://your-app.vercel.app` → only the frontend Vercel URL can make requests
+
+---
+
+## Testing
+
+The backend uses **Vitest** as the test runner. Tests live in `src/__tests__/` and are split into two types:
+
+```
+backend/src/
+└── __tests__/
+    ├── process.service.test.ts   # unit  — mocks Prisma, tests business logic
+    └── area.routes.test.ts       # integration — Supertest against real Express app
+```
+
+### Unit Tests — `process.service.test.ts`
+
+Tests business logic in isolation by mocking the Prisma singleton. The real database is never touched — all `prisma.*` calls are intercepted by `vi.mock`.
+
+A `makeProcess` factory builds valid records with sensible defaults, and a `mockProcesses` helper configures `findMany` for each test:
+
+```typescript
+/** Creates a valid Process record with sensible defaults. */
+function makeProcess(overrides: Partial<Process> = {}): Process { ... }
+
+/** Configures `findMany` to return the given flat list of processes. */
+function mockProcesses(...processes: Partial<Process>[]) {
+  vi.mocked(prisma.process.findMany).mockResolvedValue(
+    processes.map(makeProcess),
+  )
+}
+```
+
+Each test then reads as a clear scenario:
+
+```typescript
+it("nests a child process under its parent", async () => {
+  mockProcesses(
+    { id: "1", name: "Parent", parentId: null },
+    { id: "2", name: "Child", parentId: "1" },
+  )
+
+  const tree = await processService.getTree()
+
+  expect(tree).toHaveLength(1)
+  expect(tree[0]?.children[0]?.name).toBe("Child")
+})
+```
+
+### Integration Tests — `area.routes.test.ts`
+
+Tests the full HTTP layer using **Supertest** against the real Express app from `app.ts`. The service layer is mocked so no database is involved — the tests focus on HTTP concerns: status codes, JSON parsing, and Zod validation.
+
+A `postArea` helper removes repetition across requests:
+
+```typescript
+/** Shorthand for a POST /api/v1/areas request. */
+const postArea = (body: unknown) =>
+  request(app).post("/api/v1/areas").send(body)
+```
+
+Invalid-input cases are grouped in their own `describe` to make the intent explicit:
+
+```typescript
+describe("invalid request — Zod validation rejects before reaching the service", () => {
+  it("returns 400 when name is an empty string", async () => {
+    const res = await postArea({ name: "" })
+    expect(res.status).toBe(400)
+    expect(areaService.create).not.toHaveBeenCalled()
+  })
+})
+```
+
+### Why `app.ts` is separate from `server.ts`
+
+`app.ts` creates and exports the Express app. `server.ts` imports it and calls `app.listen()`. This separation is required for Supertest: importing `server.ts` would start the server on a real port, causing conflicts when multiple tests run. Importing `app.ts` gives Supertest the app without binding to any port.
+
+```
+app.ts    → creates Express app, registers middleware and routes  (used in tests)
+server.ts → imports app, calls app.listen()                      (used in production)
+```
+
+### Running Tests
+
+```bash
+npm test           # run all tests once
+npm run test:watch # run in watch mode (re-runs on file changes)
+```

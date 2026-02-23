@@ -30,6 +30,8 @@ npm run dev
 | `npm run dev` | Start server with `tsx watch` (development only) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start` | Run compiled server — used in production (Render) |
+| `npm test` | Run tests once (Vitest) |
+| `npm run test:watch` | Run tests in watch mode |
 | `npx prisma migrate dev` | Create and apply a new migration |
 | `npx prisma migrate deploy` | Apply migrations (production) |
 | `npx prisma db seed` | Run the seed script |
