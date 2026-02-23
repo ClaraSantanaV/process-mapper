@@ -7,28 +7,11 @@ import type {
 import { api } from "./api"
 
 export const processService = {
-  async getAll(parentId?: string): Promise<Process[]> {
-    const { data } = await api.get<Process[]>("/processes", {
-      params: parentId ? { parentId } : undefined,
-    })
-    return data
-  },
-
   async getTree(): Promise<ProcessNode[]> {
     const { data } = await api.get<ProcessNode[]>("/processes/tree")
     return data
   },
-
-  async getById(id: string): Promise<Process> {
-    const { data } = await api.get<Process>(`/processes/${id}`)
-    return data
-  },
-
-  async getBreadcrumb(id: string): Promise<Process[]> {
-    const { data } = await api.get<Process[]>(`/processes/${id}/breadcrumb`)
-    return data
-  },
-
+  
   async create(payload: CreateProcessPayload): Promise<Process> {
     const { data } = await api.post<Process>("/processes", payload)
     return data
@@ -39,14 +22,17 @@ export const processService = {
     return data
   },
 
-  async move(id: string, parentId: string | null): Promise<Process> {
-    const { data } = await api.patch<Process>(`/processes/${id}/move`, {
-      parentId,
-    })
+  async delete(id: string): Promise<void> {
+    await api.delete(`/processes/${id}`)
+  },
+
+  async getBreadcrumb(id: string): Promise<Process[]> {
+    const { data } = await api.get<Process[]>(`/processes/${id}/breadcrumb`)
     return data
   },
 
-  async delete(id: string): Promise<void> {
-    await api.delete(`/processes/${id}`)
+  async move(id: string, parentId: string | null): Promise<Process> {
+    const { data } = await api.patch<Process>(`/processes/${id}/move`, { parentId })
+    return data
   },
 }

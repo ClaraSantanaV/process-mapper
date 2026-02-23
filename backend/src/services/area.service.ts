@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { prisma } from "../lib/prisma.js"
 
 export const areaService = {
@@ -8,16 +9,16 @@ export const areaService = {
     })
   },
 
-  async create(name: string) {
+  async create(data: Prisma.AreaCreateInput) {
     return prisma.area.create({
-      data: { name }
+      data
     })
   },
 
-  async update(id: string, name: string) {
+  async update(id: string, data: Prisma.AreaUpdateInput) {
     return prisma.area.update({
       where: { id },
-      data: { name }
+      data
     })
   },
 
