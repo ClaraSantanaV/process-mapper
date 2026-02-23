@@ -19,6 +19,8 @@ This document covers the internal structure, conventions, and key patterns of th
 - [Search and Filter Logic](#search-and-filter-logic)
 - [TypeScript Configuration](#typescript-configuration)
 - [Types and Interfaces](#types-and-interfaces)
+- [Testing](#testing)
+- [Types and Interfaces](#types-and-interfaces)
 
 ---
 
@@ -452,4 +454,83 @@ export interface TableActions {
   onDeleteProcess: (process: Process) => void
   onMoveProcess: (process: Process) => void
 }
+```
+
+---
+
+## Testing
+
+The frontend uses **Vitest** + **React Testing Library** + **jsdom** for component testing. Tests live in `src/__tests__/`:
+
+```
+frontend/src/
+└── __tests__/
+    └── AreaFormModal.test.tsx   # component tests for the create/edit area modal
+```
+
+### Setup
+
+There is no global setup file. `@testing-library/jest-dom` is imported directly at the top of each test file, extending `expect()` with DOM matchers (`toBeInTheDocument`, `toBeDisabled`, `toHaveValue`, etc.):
+
+```tsx
+import "@testing-library/jest-dom"
+```
+
+### Component Tests — `AreaFormModal.test.tsx`
+
+Component tests render components in a simulated browser (jsdom) and assert on visible behavior — not implementation details like internal state or CSS class names. The API service is mocked so no real HTTP calls are made.
+
+Helper functions abstract away repetitive `render` calls, and small query helpers keep the assertions readable:
+
+```tsx
+const existingArea = { id: "area-1", name: "Finance", order: 0 }
+
+/** Renders the modal in create mode (no area prop). */
+function renderCreateModal(onSuccess = vi.fn()) {
+  render(<AreaFormModal onClose={vi.fn()} onSuccess={onSuccess} />)
+}
+
+const nameInput = () => screen.getByPlaceholderText("ex: Recursos Humanos")
+const submitButton = (label: RegExp) => screen.getByRole("button", { name: label })
+```
+
+Each test then focuses purely on behavior:
+
+```tsx
+it("calls areaService.create and onSuccess on valid submit", async () => {
+  vi.mocked(areaService.create).mockResolvedValue(existingArea)
+  const onSuccess = vi.fn()
+  renderCreateModal(onSuccess)
+
+  await userEvent.type(nameInput(), "Finance")
+  await userEvent.click(submitButton(/criar área/i))
+
+  await waitFor(() => {
+    expect(areaService.create).toHaveBeenCalledWith({ name: "Finance" })
+    expect(onSuccess).toHaveBeenCalledOnce()
+  })
+})
+```
+
+### What is tested
+
+| Test | What it verifies |
+|---|---|
+| Renders 'Nova Área' title with empty input | Initial state in create mode |
+| Submit button disabled while input is empty | Input validation before submit |
+| Calls `create` + `onSuccess` on valid submit | Happy path for creation |
+| Shows error message when service throws | Error handling feedback |
+| Pre-fills input and title in edit mode | Correct initialization from `area` prop |
+| Calls `update` with the new name on submit | Happy path for editing |
+
+### CSS Modules in Tests
+
+Vitest mocks CSS module imports automatically in the jsdom environment — class names resolve to empty strings. Tests remain style-agnostic and focused on behavior.
+
+### Running Tests
+
+```bash
+npm test           # run all tests once
+npm run test:watch # run in watch mode
+```
 ```
