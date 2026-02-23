@@ -7,8 +7,8 @@ const app = express()
 
 app.use(express.json())
 
-app.use("/areas", areaRoutes)
-app.use("/processes", processRoutes)
+app.use("/api/v1/areas", areaRoutes)
+app.use("/api/v1/processes", processRoutes)
 
 app.use(errorHandler)
 

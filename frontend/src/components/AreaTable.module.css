@@ -1,0 +1,25 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 64px 20px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.empty p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.empty strong {
+  color: var(--color-text);
+}

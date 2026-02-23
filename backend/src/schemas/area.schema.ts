@@ -6,3 +6,7 @@ export const createAreaSchema = z.object({
 })
 
 export const updateAreaSchema = createAreaSchema.partial()
+
+export const reorderAreaSchema = z.object({
+  orderedIds: z.array(z.string().uuid())
+})

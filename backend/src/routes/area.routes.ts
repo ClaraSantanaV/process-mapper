@@ -1,5 +1,10 @@
 import { Router } from "express"
 import { areaService } from "../services/area.service.js"
+import {
+  createAreaSchema,
+  reorderAreaSchema,
+  updateAreaSchema
+} from "../schemas/area.schema.js"
 
 const router = Router()
 
@@ -11,17 +16,29 @@ router.get("/", async (req, res) => {
 
 // POST /areas
 router.post("/", async (req, res) => {
-  const { name } = req.body
-  const area = await areaService.create(name)
+  const parsed = createAreaSchema.parse(req.body)
+  const area = await areaService.create({
+    name: parsed.name,
+    ...(parsed.order !== undefined && { order: parsed.order })
+  })
   res.json(area)
+})
+
+// PATCH /areas/reorder
+router.patch("/reorder", async (req, res) => {
+  const { orderedIds } = reorderAreaSchema.parse(req.body)
+  await areaService.reorder(orderedIds)
+
+  res.json({ message: "Areas reordered" })
 })
 
 // PATCH /areas/:id
 router.patch("/:id", async (req, res) => {
   const { id } = req.params
-  const { name } = req.body
-
-  const area = await areaService.update(id, name)
+  const parsed = updateAreaSchema.parse(req.body)
+  const area = await areaService.update(id, Object.fromEntries(
+    Object.entries(parsed).filter(([, value]) => value !== undefined)
+  ))
   res.json(area)
 })
 
@@ -33,12 +50,5 @@ router.delete("/:id", async (req, res) => {
   res.json({ message: "Area deleted" })
 })
 
-// PATCH /areas/reorder
-router.patch("/reorder", async (req, res) => {
-  const { orderedIds } = req.body
-  await areaService.reorder(orderedIds)
-
-  res.json({ message: "Areas reordered" })
-})
 
 export default router

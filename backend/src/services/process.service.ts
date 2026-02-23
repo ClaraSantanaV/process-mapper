@@ -1,4 +1,7 @@
+import { Prisma, Process } from "@prisma/client"
 import { prisma } from "../lib/prisma.js"
+
+type ProcessNode = Process & { children: ProcessNode[] }
 
 export const processService = {
   async getAll(parentId?: string) {
@@ -12,11 +15,11 @@ export const processService = {
     return prisma.process.findUnique({ where: { id } })
   },
 
-  async create(data: any) {
+  async create(data: Prisma.ProcessUncheckedCreateInput) {
     return prisma.process.create({ data })
   },
 
-  async update(id: string, data: any) {
+  async update(id: string, data: Prisma.ProcessUncheckedUpdateInput) {
     return prisma.process.update({
       where: { id },
       data
@@ -39,16 +42,21 @@ export const processService = {
       orderBy: { order: "asc" }
     })
 
-    const map = new Map()
-    const roots: any[] = []
+    const map = new Map<string, ProcessNode>()
+    const roots: ProcessNode[] = []
 
-    processes.forEach(p => map.set(p.id, { ...p, children: [] }))
+    processes.forEach(process =>
+      map.set(process.id, { ...process, children: [] })
+    )
 
-    processes.forEach(p => {
-      if (p.parentId) {
-        map.get(p.parentId)?.children.push(map.get(p.id))
+    processes.forEach(process => {
+      const node = map.get(process.id)
+      if (!node) return
+
+      if (process.parentId) {
+        map.get(process.parentId)?.children.push(node)
       } else {
-        roots.push(map.get(p.id))
+        roots.push(node)
       }
     })
 
@@ -56,8 +64,10 @@ export const processService = {
   },
 
   async getBreadcrumb(id: string) {
-    const breadcrumb = []
-    let current = await prisma.process.findUnique({ where: { id } })
+    const breadcrumb: Process[] = []
+    let current: Process | null = await prisma.process.findUnique({
+      where: { id }
+    })
 
     while (current) {
       breadcrumb.unshift(current)
