@@ -37,7 +37,7 @@ export function ProcessRow({ node, actions, depth = 0, defaultExpanded = false }
 
   return (
     <div className={styles.wrapper} style={{ "--depth": depth } as ProcessRowStyle}>
-      <div className={styles.row}>
+     <div className={styles.row}>
         <button
           type="button"
           className={`${styles.toggle} ${hasChildren ? styles.toggleActive : ""}`}
@@ -60,24 +60,26 @@ export function ProcessRow({ node, actions, depth = 0, defaultExpanded = false }
 
         <span className={styles.name}>{node.name}</span>
 
-        {node.status && (
-          <span className={`${styles.badge} ${styles[`badge${node.status}`]}`}>
-            {STATUS_LABEL[node.status]}
-          </span>
-        )}
-
-        {node.tools && (
-          <span className={styles.pill} title={`Ferramentas: ${node.tools}`}>
-            <ToolsIcon />
-            {node.tools}
-          </span>
-        )}
-
-        {node.responsible && (
-          <span className={styles.pill} title={`Responsável: ${node.responsible}`}>
-            <PersonIcon />
-            {node.responsible}
-          </span>
+        {(node.status || node.tools || node.responsible) && (
+          <div className={styles.meta}>
+            {node.status && (
+              <span className={`${styles.badge} ${styles[`badge${node.status}`]}`}>
+                {STATUS_LABEL[node.status]}
+              </span>
+            )}
+            {node.tools && (
+              <span className={styles.pill} title={`Ferramentas: ${node.tools}`}>
+                <ToolsIcon />
+                {node.tools}
+              </span>
+            )}
+            {node.responsible && (
+              <span className={styles.pill} title={`Responsável: ${node.responsible}`}>
+                <PersonIcon />
+                {node.responsible}
+              </span>
+            )}
+          </div>
         )}
 
         <div className={styles.actions}>

@@ -78,16 +78,22 @@
   color: var(--color-systemic);
 }
 
-/* Name */
 .name {
   font-size: 13.5px;
   color: var(--color-text);
   flex: 1;
-  line-height: 1.4;
   min-width: 0;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* Status badge */
@@ -122,7 +128,7 @@
   border-radius: 99px;
   padding: 2px 8px;
   white-space: nowrap;
-  max-width: 160px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   flex-shrink: 0;
@@ -168,4 +174,20 @@
 .children {
   border-left: 2px solid var(--color-border);
   margin-left: calc(21px + var(--depth, 0) * 20px);
+}
+
+@media (max-width: 640px) {
+  .row {
+    flex-wrap: wrap;
+  }
+
+  .meta {
+    width: 100%;
+    flex-wrap: wrap;
+    padding-left: calc(20px + 15px + 12px); /* toggle + typeIcon + gap */
+  }
+
+  .name {
+    white-space: normal; /* permite quebrar o nome no mobile */
+  }
 }
